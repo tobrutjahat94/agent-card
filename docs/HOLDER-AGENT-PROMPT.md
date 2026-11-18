@@ -7,9 +7,9 @@ you only confirm in the Binance App when it asks you.
 
 - `[YOUR AGENTIC WALLET ADDRESS]` — your Agentic Wallet address (the one that holds your Agent ID).
 - `[AGENTCARD CONTRACT ADDRESS]` — the deployed AgentCard address from the AgentCard website / README. Do not register until the website shows it as live and BscScan shows its source code as verified.
-- `[YOUR TOKEN NUMBER]` — your Agent ID tokenId, from BscScan (your address page → ERC-721 Token Txns).
-- `[YOUR ENDPOINT]` — your agent's public endpoint, an `https://` URL, max 200 characters.
-- `[YOUR MESSAGE]` — your short public message, max 280 characters. Permanent — choose text you are happy to keep public forever.
+- `[YOUR TOKEN NUMBER]` — your Agent ID token number, from BscScan (your address page → ERC-721 Token Txns).
+- `[YOUR ENDPOINT]` — your agent's public endpoint, an `https://` URL, max 200 bytes.
+- `[YOUR MESSAGE]` — your short public message, max 280 bytes. Permanent — choose text you are happy to keep public forever.
 
 ---
 
@@ -47,61 +47,62 @@ Do this, in order, and do not skip a step:
    ownerOf([YOUR TOKEN NUMBER]) on the Agent ID contract above. If either
    check fails, STOP and tell me why.
 
-4. Build the register() calldata with the AgentCard repo helper (clone
-   https://github.com/tobrutjahat94/agent-card if you do not have it):
-   node scripts/build-register-calldata.js --from [YOUR AGENTIC WALLET ADDRESS] --to [AGENTCARD CONTRACT ADDRESS] --tokenId [YOUR TOKEN NUMBER] --endpoint "[YOUR ENDPOINT]" --message "[YOUR MESSAGE]"
-   Only continue if its dry run says register() would SUCCEED. If it says
-   it would revert, STOP and show me the revert reason.
+4. Get the helper script from the PINNED release — never from an
+   unpinned clone, because the repo can change after this prompt was
+   written and a changed script could do something else. The pinned
+   release is tag `v1.0`, commit
+   [PINNED COMMIT HASH — filled in when the v1.0 tag is created; see
+   the current version of this file on the main branch for the hash]:
+   git clone https://github.com/tobrutjahat94/agent-card
+   cd agent-card
+   git checkout v1.0
+   git rev-parse HEAD
+   The last command must print exactly the pinned hash. If it prints
+   anything else, STOP — the code is not the reviewed release. Then
+   READ scripts/build-register-calldata.js first (it is short; it is
+   read-only — do not run it before reading it), and run `npm install`
+   in the repo root (it installs ethers, the only dependency the
+   script needs). If the repo's scripts/ change again, this pinned
+   hash must be updated — do not check out a newer commit unless this
+   prompt's pin is updated too. The contract address is not part of
+   the pin: it comes in through --to below, so a new deployment does
+   not need a new pin.
 
-5. Run the preview and SHOW IT TO ME BEFORE ANYTHING IS SIGNED:
-   baw contract-call preview --binanceChainId 56 --from [YOUR AGENTIC WALLET ADDRESS] --to [AGENTCARD CONTRACT ADDRESS] --value 0 --inputData <calldata from step 4> --json
+5. Build the register() calldata with the helper (single quotes —
+   double quotes break on $, backticks and " inside the message,
+   because the shell expands them):
+   node scripts/build-register-calldata.js --from [YOUR AGENTIC WALLET ADDRESS] --to [AGENTCARD CONTRACT ADDRESS] --tokenId [YOUR TOKEN NUMBER] --endpoint '[YOUR ENDPOINT]' --message '[YOUR MESSAGE]'
+   If your message itself contains a single quote, pass it from a
+   file instead (same for the endpoint): put the exact text in a
+   file and use --messageFile <path> (or --endpointFile <path>).
+   Only continue if its dry run says register() would SUCCEED. If it
+   says it would revert, STOP and show me the revert reason. Note
+   the limits are in bytes (endpoint 200 bytes, message 280 bytes):
+   an emoji counts as 4 bytes, so a short-looking message can still
+   be over the limit — the script tells you the exact byte count.
+
+6. Run the preview and SHOW IT TO ME BEFORE ANYTHING IS SIGNED:
+   baw contract-call preview --binanceChainId 56 --from [YOUR AGENTIC WALLET ADDRESS] --to [AGENTCARD CONTRACT ADDRESS] --value 0 --inputData <calldata from step 5> --json
    Show me: the contract address, the token number, the endpoint, the
    message, the gas cost, simulationResult.simulationCode, and every risk
    item. If the preview is blocked (code 351803) or returns no requestId,
    STOP, do not execute, and show me the blockReason.
 
-6. WAIT for my explicit "yes" in this chat. Do not execute before I say yes.
+7. WAIT for my explicit "yes" in this chat. Do not execute before I say yes.
 
-7. Only after my yes, execute:
+8. Only after my yes, execute:
    baw contract-call execute --requestId <requestId from the preview> --json
    If the result is PENDING_CONFIRMATION, tell me to approve it in the
-   Binance App. If it says the preview expired, go back to step 5 with a
+   Binance App. If it says the preview expired, go back to step 6 with a
    fresh preview.
 
-8. After the transaction confirms, verify my card on-chain: call
+9. After the transaction confirms, verify my card on-chain: call
    endpointOf([YOUR AGENTIC WALLET ADDRESS]) and
    getCard([YOUR AGENTIC WALLET ADDRESS]) on the AgentCard contract and
    show me the token number, endpoint, message, and the BscScan
-   transaction link. The card is permanent and cannot be changed — if
-   anything in the preview did not match my details above, tell me
-   BEFORE step 6, not after.
-
-If I ask you to draft a message inviting other Agent ID holders to
-register, follow these campaign rules in the draft, and show me the
-draft for my decision — you never post it yourself:
-- Say plainly this is a hackathon entry and who made it: AgentCard by
-  tobrutjahat94, repo https://github.com/tobrutjahat94/agent-card,
-  contract [AGENTCARD CONTRACT ADDRESS] verified on BscScan, and the
-  README section "Owner permissions" (the contract has no owner at all).
-- Explain exactly what is signed: one register() call, value 0 BNB,
-  gas only, no approval of any spending, and it cannot be undone. The
-  card is permanent and public.
-- Never ask for anything sensitive — seed phrase, API secret, pairing
-  code, or QR login — anywhere, including by DM. That is a red line.
-- Never promise a reward or a return. Never use "passive income" or
-  "automatic money-making" language.
-- Never offer prizes or rewards for registering. Paying people to
-  register can be read as manipulated volume/interaction and can get
-  the project disqualified.
-- Never use "Binance" or "BNB" in an account name, project name, or
-  domain. Saying "Binance Agent ID Hackathon" to explain the event is
-  fine. Hashtags #BinanceWalletHackathon and #AgenticWallet may be used.
-- Do not present the separate 2,000 USDC Promotion Award (community
-  posts reviewing other projects) as a way to attract holders.
-- Where to find holders: the official Discord or Telegram of Binance
-  Wallet and BNB Chain. Tell me to read each group's own rules about
-  promotion before posting there. Do not claim a dedicated Agent ID
-  group exists unless it is verified.
+   transaction link. The card is permanent and public — if anything in
+   the preview did not match my details above, tell me BEFORE step 7,
+   not after.
 
 Safety rules for this whole task:
 - Never ask me for my seed phrase, private key, password, or pairing code.
@@ -112,9 +113,8 @@ Safety rules for this whole task:
 - The transaction value must be 0 BNB (gas only). Never approve a payment.
 - One Agent ID = one card. Never register a second card for me, and never
   create extra accounts or wallets to register more cards.
-- You never post anything on my behalf. A draft may be checked by Claude,
-  but the decision to post and the posting itself are done by me, the
-  human owner of the account.
+- You never post anything on my behalf. The decision to post and the
+  posting itself are done by me, the human owner of the account.
 ```
 
 ## The prompt — copy everything above this line

@@ -171,3 +171,146 @@ file prompt sempat 404 ~2 menit karena lag rebuild Pages, lalu 200).
 - Syarat persiapan deploy masuk README ("Deploy preparation"): (1) wallet deployer khusus baru, saldo BNB secukupnya buat gas saja, BUKAN wallet utama; private key TIDAK PERNAH masuk chat/repo/state file. (2) Verifikasi source di BscScan langsung setelah deploy (syarat eligibility). (3) Owner permissions di README — kontrak tidak punya fungsi owner sama sekali (ditulis eksplisit). (4) Jangan ubah kontrak setelah ada interaksi (alamat baru = hitungan mulai nol; testnet dipakai habis-habisan buat logika). (5) SATU KONTRAK SAJA (satu tim satu proyek, cuma alamat yang disubmit yang dihitung).
 - Estimasi gas diukur lokal (`scripts/estimate-gas.js`): deploy AgentCard 1,307,491 gas (~0.00131 BNB @1 gwei, ~0.00392 @3 gwei); register 195,038 gas (~0.00020 BNB @1 gwei). Saran funding deployer: 0.02 BNB.
 - User TIDAK punya akses ke builder/state file dari chat → laporan builder harus berisi SEMUA materi review ditempel lengkap (kode kontrak, draf dokumentasi agent, materi submit), bukan sekadar path file.
+
+## 2026-11-18 ~20:11 WIB — Revisi luar-kontrak (batch kontrak DIKUNCI)
+
+Review user 20:10 WIB: kontrak final OK (logika konsisten, `endpointOf` +
+guard endpoint kosong benar, gas register 195.091 wajar) — **batch kontrak
+dikunci, tidak ada perubahan di `contracts/`**. Semua poin di bawah ini di
+luar kontrak. Revisi ini TIDAK menahan deploy mainnet: deploy, verifikasi
+BscScan, dan kartu pertama bisa jalan paralel. Yang harus menunggu revisi
+ini hanya mengundang holder lain + memasang hash pin di prompt.
+
+1. **getLogs di `docs/app.js` (kemungkinan gagal).** `CHUNK = 100000` pada
+   RPC publik BSC biasanya kena batas rentang blok (probe builder sendiri
+   cuma pakai 3.000 blok — indikasi sama). Perbaikan: (a) tampilkan
+   `totalCards()` DULU (satu `eth_call`, tanpa logs) — angkanya muncul
+   langsung walau scan log gagal; kalau total 0, `getLogs` tidak dipanggil
+   sama sekali; (b) scan log dengan chunk yang mengecil otomatis
+   (100000 → 10000 → 3000 → 1000) di semua RPC cadangan
+   (bsc-dataseed.binance.org, bsc-dataseed1.defibit.io,
+   bsc-dataseed1.ninicoin.io, bsc.publicnode.com; testnet: dua dataseed
+   prebsc + bsc-testnet.publicnode.com); (c) kalau semua gagal, tampilkan
+   link ke halaman kontrak di BscScan, bukan cuma pesan error. Tiap
+   percobaan RPC dibatasi 15 detik agar RPC mati tidak menggantung halaman.
+   Probe dari VM builder 20:11 WIB: ketujuh RPC menjawab `eth_blockNumber`,
+   tapi `eth_getLogs` ditolak/diputus di semua RPC yang dicoba — bahkan
+   rentang 500 blok kena `-32005 limit exceeded` / disconnect (IP VM
+   di-rate-limit; catatan lama yang sama ada di NOTES 19:12). Jadi batas
+   rentang per-RPC yang persis TIDAK bisa ditetapkan dari VM ini; tangga
+   chunk di atas adalah desain defensif sesuai spek user, dan tes
+   sesungguhnya adalah mainnet setelah kartu pertama masuk — ditulis
+   eksplisit di komentar `app.js` (jangan klaim sudah dites mainnet).
+2. **Prompt holder (supply-chain).** `docs/HOLDER-AGENT-PROMPT.md` langkah 4
+   ditulis ulang: clone lalu `git checkout v1.0`, verifikasi
+   `git rev-parse HEAD` sama dengan hash pin, BACA
+   `scripts/build-register-calldata.js` dulu (singkat, read-only — jangan
+   jalanin sebelum baca), lalu `npm install` (sebelumnya langkah ini tidak
+   ada). Pin = tag `v1.0` + hash lengkap commit berisi script final.
+   **Dua commit (bukan satu):** hash commit tidak bisa diketahui sebelum
+   commit dibuat, jadi commit #1 berisi semua revisi (script final),
+   ditag `v1.0`; commit #2 mengisi hash lengkap commit #1 ke dalam prompt.
+   Hash pin ≠ HEAD — itu benar dan disengaja: prompt dibaca dari `main`
+   (terbaru), script dijalankan dari checkout `v1.0`; `git diff v1.0 HEAD
+   -- scripts/ docs/app.js` harus kosong (diverifikasi saat commit #2).
+   Alamat kontrak bukan bagian dari pin: masuk lewat `--to`, jadi deploy
+   baru tidak butuh pin baru — tapi kalau `scripts/` berubah lagi, hash
+   di prompt HARUS diganti (ditulis di prompt).
+3. **Bagian "draft a message inviting other holders" DIHAPUS dari prompt
+   holder.** Itu aturan internal, bukan buat holder — membengkakkan
+   prompt, membingungkan, dan membocorkan alur kerja ("checked by
+   Claude"). Isinya dipindah ke catatan privat di bawah (bagian "Private
+   — campaign rules" di entri ini, BUKAN di prompt). Prompt tidak lagi
+   menyebut "checked by Claude" / alur internal: baris safety-nya kini
+   "You never post anything on my behalf. The decision to post and the
+   posting itself are done by me, the human owner of the account."
+   AGENT-GUIDE / README / SUBMISSION tetap memakai wording "dicek Claude,
+   diputuskan dan diposting manusia" — itu wording yang disetujui user
+   19:33 untuk dokumen publik proyek; yang dihapus hanya dari prompt
+   (instruksi tempel-ke-agent).
+4. **Quoting + byte length.** Prompt + script konsisten pakai kutip
+   tunggal: `--endpoint '...' --message '...'` (kutip ganda merusak `$`,
+   backtick, `"`). Kalau pesan mengandung kutip tunggal, pakai
+   `--messageFile` / `--endpointFile` (baru di script: file dibaca
+   verbatim, satu newline akhir di-strip). `scripts/build-register-calldata.js`
+   ganti `.length` → `Buffer.byteLength(..., "utf8")` untuk endpoint
+   (200 byte) dan message (280 byte), dengan pesan error yang menyebut
+   jumlah byte persis. Verifikasi CLI 20:11 WIB (lokal, tanpa network
+   untuk penolakan — cek panjang jalan sebelum RPC): pesan 71×😀 (71
+   karakter, 284 byte) → `Error: message is 284 bytes, over the
+   280-byte contract limit`, exit 1; endpoint `https://example.com/` +
+   46×😀 (66 karakter, 204 byte) → `Error: endpoint is 204 bytes, over
+   the 200-byte contract limit`, exit 1. Dengan `.length` lama, keduanya
+   lolos cek (71 dan 66) lalu revert membingungkan di dry-run. Batas
+   inklusif: pesan 70×😀 = 280 byte persis LOLOS validasi (lanjut ke
+   cek agentId di node lokal). `--messageFile` berisi
+   `It's $100 \`tick\` "quoted" 🎉` lolos validasi; round-trip
+   encode/decode calldata (ethers Interface yang sama dengan script)
+   membuktikan byte-nya identik (`message match: true`). Quoting shell
+   kutip tunggal diverifikasi via argv echo (string diterima literal).
+   Batasan jujur: dry-run SUCCEED penuh dengan emoji tidak bisa
+   dijalankan lokal — script (by design) menolak deployment yang
+   `agentId()`-nya bukan Agent ID resmi, dan kontrak resmi tidak ada di
+   localhost; kedua kasus lolos-validasi di atas berhenti di cek agentId
+   itu (mock), seperti dirancang. Jalur dry-run sendiri tidak berubah
+   dari revisi sebelumnya (sudah dibuktikan end-to-end lokal saat itu),
+   dan batas byte kontrak dicakup test suite (200/280 pas lolos, lebih
+   revert — `npx hardhat test` 14/14, dijalankan ulang 20:11 WIB).
+5. **Endpoint tetap link klikabel (pilihan: teks + tombol "open").**
+   `rowElement` di `app.js`: endpoint ditampilkan sebagai teks polos
+   (span, wrap), lalu — hanya untuk `https://` — tombol link terpisah
+   "open ↗" + label kecil "user-submitted, verify before opening".
+   Bukan endpoint-nya sendiri yang jadi link. Diterapkan konsisten di
+   `app.js` + `index.html` (paragraf Directory) + kalimat yang sama di
+   README ("Website") dan AGENT-GUIDE ("Finding other agents").
+6. **`index.html` memuat ethers versi dipin** (sudah benar sebelum
+   revisi ini, diverifikasi): `<script
+   src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js">`
+   — versi 6.13.2, bukan `latest`.
+7. **Push vs snapshot cache user.** Dicek dari sisi server setelah push
+   (lihat lampiran commit #2): remote HEAD + README via
+   raw.githubusercontent.com — pastikan beda dari snapshot lama user
+   (2 commit, README "11 tests", gas lama, "normal wallet" sebagai
+   jalur). Catatan: kata "normal wallet" masih muncul di repo, tapi
+   hanya sebagai penolakan ("There is no 'register from a normal wallet
+   on the website' path", README) dan istilah resmi Binance ("normal
+   wallet limits", AGENT-GUIDE) — bukan sebagai jalur register.
+8. **Key testnet bocor (dianggap bocor, testnet saja).** `git log --all --
+   deployments/testnet-deployer.json` di repo lokal builder: KOSONG
+   (dijalankan 20:10 WIB, exit 0, tanpa output). Cek dari CLONE SEGAR
+   + `git log --all -p | grep -i "private"` + secret scanning GitHub
+   ada di lampiran commit #2.
+9. **Developer Mode tetap paling rapuh.** Tidak ada klaim sumber yang
+   diubah; ditambahkan catatan "First-test check" di AGENT-GUIDE: saat
+   tes holder mainnet pertama, cocokkan tiap label/langkah Step 1
+   dengan yang tampil di App dan laporkan perbedaannya agar guide
+   diperbaiki dari cek itu, bukan dari ingatan.
+
+### Private — campaign rules (dipindah dari prompt holder, BUKAN untuk holder)
+
+Aturan internal proyek untuk draf yang mengundang holder lain (dulu ada
+di `docs/HOLDER-AGENT-PROMPT.md`, dihapus dari sana 20:11 WIB karena
+bukan instruksi buat holder):
+- Say plainly this is a hackathon entry and who made it: AgentCard by
+  tobrutjahat94, repo https://github.com/tobrutjahat94/agent-card,
+  contract verified on BscScan, README "Owner permissions" (no owner).
+- Explain exactly what is signed: one register() call, value 0 BNB,
+  gas only, no approval of any spending, cannot be undone. Card is
+  permanent and public.
+- Never ask for anything sensitive — seed phrase, API secret, pairing
+  code, QR login — anywhere, including by DM. Red line.
+- Never promise a reward or a return. Never use "passive income" or
+  "automatic money-making" language.
+- Never offer prizes or rewards for registering (manipulated
+  volume/interaction → disqualification risk).
+- Never use "Binance" or "BNB" in an account/project/domain name.
+  Saying "Binance Agent ID Hackathon" to explain the event is fine.
+  Hashtags #BinanceWalletHackathon + #AgenticWallet may be used.
+- Do not present the separate 2,000 USDC Promotion Award (community
+  posts reviewing other projects) as a way to attract holders.
+- Where to find holders: official Discord or Telegram of Binance
+  Wallet and BNB Chain. Read each group's promotion rules first.
+  Do not claim a dedicated Agent ID group exists unless verified.
+- Role flow: a draft may be checked by Claude, but the decision to
+  post and the posting itself are done by the human owner of the
+  account — never by a bot.

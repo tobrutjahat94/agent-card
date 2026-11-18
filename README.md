@@ -151,7 +151,7 @@ contract is also the most likely to be flagged by Binance's risk engine
 ```
 contracts/AgentCard.sol        # the registry (no dependencies)
 contracts/mocks/MockAgentID.sol# testnet-only stand-in for the Agent ID contract
-test/AgentCard.test.js         # 13 unit tests (Hardhat), incl. endpointOf
+test/AgentCard.test.js         # 14 unit tests (Hardhat), incl. endpointOf
 scripts/deploy-testnet.js      # BSC testnet deploy + mock mint + test register
 scripts/deploy-mainnet.js      # BSC mainnet deploy (wallet owner runs directly; bot never runs it)
 scripts/build-register-calldata.js # builds register() calldata + baw commands, dry-runs it
@@ -191,8 +191,9 @@ connect a wallet or sign anything. Registration happens only through a
 holder's own AI agent (see `docs/HOLDER-AGENT-PROMPT.md`). Fill in the
 deployed contract addresses in `docs/app.js` (`CONFIG`) after deploy.
 Holder-supplied endpoint/message text is rendered with `textContent` only
-(never `innerHTML`); links are created only for `https://` endpoints, with
-`rel="noopener noreferrer"`.
+(never `innerHTML`); an `https://` endpoint is shown as plain text plus a
+separate "open" link labelled "user-submitted, verify before opening" —
+anything else is plain text with no link at all.
 
 ## Rules we follow
 

@@ -188,7 +188,7 @@ website, no search box needed:
 
 1. Pick a wallet from the directory, then call `endpointOf(thatWallet)` on the AgentCard contract — it returns that agent's public endpoint.
 2. Or call `getCard(thatWallet)` to get the token number, endpoint, message, and registration time in one call.
-3. Fetch the endpoint URL — that is the peer agent. (Only `https://` endpoints are linked on the website; an agent should check the scheme itself before fetching.)
+3. Fetch the endpoint URL — that is the peer agent. (On the website, an `https://` endpoint is shown as plain text plus a separate "open" link labelled "user-submitted, verify before opening"; an agent should check the scheme itself before fetching.)
 
 ---
 
@@ -204,7 +204,7 @@ website, no search box needed:
 | `AgentCard: caller holds no Agent ID` | That address holds no Agent ID | Register from the address that actually holds your Agent ID. |
 | `AgentCard: not the owner of this Agent ID token` | The tokenId belongs to a different address | Use the tokenId that belongs to your address (Step 2). |
 | `AgentCard: already registered` | This address already has a card | You are done — one card per Agent ID, and it cannot be changed. |
-| `AgentCard: endpoint too long` / `message too long` | Over the 200 / 280 character limits | Shorten the text and try again (only if you have not registered yet). |
+| `AgentCard: endpoint too long` / `message too long` | Over the 200 / 280 **byte** limits (measured in bytes, not characters — an emoji counts as 4 bytes, so a short-looking message can still be over) | Shorten the text and try again (only if you have not registered yet). The calldata script (`scripts/build-register-calldata.js`) reports the exact byte count. |
 | Preview expired | Previews only live a short time | Ask your agent to run the preview again, then execute with the new `requestId`. (Source: Binance skills-hub `external-sign.md`.) |
 | A code you do not recognise (for example `351806`) | Not documented in the sources checked for this guide | Do not guess. Show the full error message to your agent and to the project team. |
 
@@ -216,6 +216,15 @@ official skills repository (`binance/binance-skills-hub`,
 `skills/binance-web3/binance-agentic-wallet/references/`). If anything in
 the App looks different from this guide, the App is right — confirm it there
 at test time and tell the project team so the guide can be fixed.
+
+**First-test check (do this at the first mainnet holder test, before
+inviting anyone else).** Developer Mode is the most fragile part of this
+guide, so match every label and step in Step 1 against the App as you do
+it: the exact "Developer Mode" and "Abnormal Transaction Handling" labels,
+the Risk Warning wording, the limit options, and the confirmation flow.
+If any label or step differs from this guide, the App is right — write
+down exactly what the App shows and report it to the project team so
+the guide is corrected from that check, not from memory.
 
 ---
 
