@@ -141,6 +141,31 @@ dikerjakan di repo yang sama, lalu push (lihat commit di akhir entri).
     tanpa mengubah desain; direktori dibaca dari event). Kontrak tetap
     minimal: tidak ada dana/admin/pause/mint.
 
+**Tambahan 19:33 WIB — alur peran + checklist kampanye aman** (commit
+`414ca65`, setelah commit revisi `2eb1a1c`): wording di AGENT-GUIDE /
+HOLDER-AGENT-PROMPT / SUBMISSION / README diubah jadi "dicek Claude,
+diputuskan dan diposting manusia" — draf boleh dicek Claude, tapi keputusan
++ eksekusi posting adalah manusia pemilik akun, bukan bot. Checklist
+kampanye aman masuk ke keempat file itu (bukan cuma laporan): nyatakan
+entri hackathon + pembuat + repo + kontrak verified BscScan + README owner
+permissions; jelaskan persis apa yang di-sign (satu `register()`, 0 BNB,
+cuma gas, tanpa approval, tidak bisa dibatalkan; kartu permanen + publik);
+jangan minta seed phrase / API secret / pairing code / QR login di mana
+pun termasuk DM (red line); jangan janji imbalan/return, larangan bahasa
+"passive income" / "automatic money-making" berlaku untuk komunikasi
+proyek; jangan bagi hadiah supaya orang register (risiko diskualifikasi);
+jangan pakai "Binance"/"BNB" di nama akun/proyek/domain (menyebut "Binance
+Agent ID Hackathon" untuk menjelaskan acara boleh); hashtag
+#BinanceWalletHackathon + #AgenticWallet boleh, tapi Promotion Award
+2.000 USDC adalah buat postingan komunitas yang menilai proyek lain —
+jangan andalkan untuk narik holder. Kumpul 29 holder: Discord/Telegram
+resmi Binance Wallet dan BNB Chain adalah tempat paling masuk akal; baca
+aturan tiap grup soal promosi dulu sebelum posting; tidak diklaim ada
+grup Agent ID khusus (tidak terverifikasi).
+**HEAD akhir: `414ca655d0869a081ecfa39c21963669c954d3e9`.** GitHub Pages
+terverifikasi HTTP 200 (index, AGENT-GUIDE.md, HOLDER-AGENT-PROMPT.md;
+file prompt sempat 404 ~2 menit karena lag rebuild Pages, lalu 200).
+
 ## 2026-11-18 ~19:17 — CORRECTION: deploy approval is NOT from chat (user steer)
 - Persetujuan/eksekusi deploy mainnet BUKAN sesuatu yang bisa diberikan lewat chat — itu keputusan dan tindakan langsung manusia pemilik wallet. Semua framing "menunggu persetujuan user (chat)" dihapus dari README, SUBMISSION.md, AGENT-GUIDE.md, NOTES.md, dan header `scripts/deploy-mainnet.js`; diganti "deploy dieksekusi langsung oleh manusia pemilik wallet, berdasarkan materi yang disiapkan di sini".
 - Syarat persiapan deploy masuk README ("Deploy preparation"): (1) wallet deployer khusus baru, saldo BNB secukupnya buat gas saja, BUKAN wallet utama; private key TIDAK PERNAH masuk chat/repo/state file. (2) Verifikasi source di BscScan langsung setelah deploy (syarat eligibility). (3) Owner permissions di README — kontrak tidak punya fungsi owner sama sekali (ditulis eksplisit). (4) Jangan ubah kontrak setelah ada interaksi (alamat baru = hitungan mulai nol; testnet dipakai habis-habisan buat logika). (5) SATU KONTRAK SAJA (satu tim satu proyek, cuma alamat yang disubmit yang dihitung).
