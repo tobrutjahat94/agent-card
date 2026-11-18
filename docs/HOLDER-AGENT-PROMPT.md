@@ -51,14 +51,13 @@ Do this, in order, and do not skip a step:
    unpinned clone, because the repo can change after this prompt was
    written and a changed script could do something else. The pinned
    release is tag `v1.0`, commit
-   [PINNED COMMIT HASH — filled in when the v1.0 tag is created; see
-   the current version of this file on the main branch for the hash]:
+   bc42cf4da37cbf4f67286765cec1a0d23785387d:
    git clone https://github.com/tobrutjahat94/agent-card
    cd agent-card
    git checkout v1.0
    git rev-parse HEAD
-   The last command must print exactly the pinned hash. If it prints
-   anything else, STOP — the code is not the reviewed release. Then
+   The last command must print exactly the pinned hash above. If it
+   prints anything else, STOP — the code is not the reviewed release. Then
    READ scripts/build-register-calldata.js first (it is short; it is
    read-only — do not run it before reading it), and run `npm install`
    in the repo root (it installs ethers, the only dependency the
