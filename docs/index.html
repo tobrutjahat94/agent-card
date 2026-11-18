@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentCard — One-shot on-chain agent card for Agent ID holders</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; line-height: 1.55; color: #1a1a1a; }
+  h1 { font-size: 28px; margin-bottom: 4px; }
+  h2 { font-size: 20px; margin-top: 36px; border-top: 1px solid #ddd; padding-top: 20px; }
+  .muted { color: #555; }
+  .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 12px 0; }
+  .warn { background: #fff8e1; border: 1px solid #e6c200; border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  .ok { background: #e8f5e9; border: 1px solid #66bb6a; border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+  button { background: #111; color: #fff; border: 0; border-radius: 8px; padding: 10px 18px; font-size: 15px; cursor: pointer; }
+  button:disabled { background: #999; cursor: not-allowed; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: 9px 10px; font-size: 15px; border: 1px solid #bbb; border-radius: 8px; margin: 4px 0 10px; }
+  label { font-weight: 600; font-size: 14px; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; font-size: 13px; word-break: break-all; }
+  .addr { font-family: monospace; font-size: 13px; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { border-bottom: 1px solid #eee; padding: 8px 4px; text-align: left; vertical-align: top; }
+  .small { font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>AgentCard</h1>
+<p class="muted">One-shot on-chain agent card for Agent ID holders. Register once — your card is bound to your specific Agent ID token, forever, on BNB Chain.</p>
+
+<div id="deployBanner" class="warn"><b>Status:</b> <span id="deployStatus">checking deployment…</span></div>
+
+<h2>1. Connect</h2>
+<div class="card">
+  <button id="connectBtn">Connect wallet</button>
+  <p id="walletInfo" class="small muted">Not connected.</p>
+  <p id="agentIdInfo" class="small"></p>
+  <p id="ownName" class="small"></p>
+</div>
+
+<h2>2. Register your card</h2>
+<div class="card">
+  <p class="small muted">One Agent ID = one card. Registration is permanent and cannot be changed or deleted. It costs only gas — no payment, no token, no approval of any spending.</p>
+  <label for="tokenId">Your Agent ID tokenId</label>
+  <input id="tokenId" inputmode="numeric" placeholder="e.g. 12345">
+  <p class="small muted">The Agent ID contract has no on-chain enumeration, so find your tokenId on BscScan: open your address page → <b>ERC-721 Token Txns</b> tab → the Agent ID transfer shows the tokenId. Or try auto-detect (works when your wallet RPC serves event logs):</p>
+  <button id="detectBtn" disabled>Auto-detect my tokenId</button>
+  <span id="detectStatus" class="small muted"></span>
+  <p></p>
+  <label for="endpoint">Public agent endpoint (max 200 characters)</label>
+  <input id="endpoint" placeholder="https://your-agent.example">
+  <label for="message">Short public message (max 280 characters)</label>
+  <textarea id="message" rows="2" placeholder="What does your agent do?"></textarea>
+  <button id="registerBtn" disabled>Register my card</button>
+  <p id="registerStatus" class="small"></p>
+</div>
+
+<h2>3. Directory</h2>
+<p class="small muted">Public cards, listed by wallet address and Agent ID tokenId. There is deliberately no search by name — Agent ID is identity, not a people-search tool.</p>
+<div id="directory"><p class="small muted">Loading…</p></div>
+
+<h2>How it works</h2>
+<ul>
+  <li><b>One-shot:</b> you register exactly once. No daily check-in, no upkeep.</li>
+  <li><b>Bound to your token:</b> the contract verifies <code>ownerOf(tokenId) == you</code> on-chain. Your card is proof you own that Agent ID — stronger than a simple “holds any ID” gate.</li>
+  <li><b>Your data, on-chain:</b> tokenId, endpoint and message are stored publicly. Nothing else is collected.</li>
+  <li><b>Agentic Wallet holders:</b> the Agentic Wallet does not sign arbitrary contract calls by default. Use <b>Developer Mode</b> in the Binance App (Agentic Wallet → Settings → Developer Mode), then call <code>register()</code> — see the <a href="AGENT-GUIDE.md">Agent Guide</a> for the exact steps, including the <code>baw contract-call</code> commands.</li>
+  <li><b>No owner:</b> the contract has no owner, no admin functions, no pause, no upgrade, no fund custody. Nobody — not even the deployer — can change or delete your card.</li>
+</ul>
+
+<h2>Links</h2>
+<ul>
+  <li><a href="AGENT-GUIDE.md">Agent Guide</a> — step-by-step for Agent ID holders (Developer Mode + how to call <code>register</code>)</li>
+  <li><a href="https://github.com/tobrutjahat94/agent-card">GitHub repository</a> — contract source, tests, deploy scripts</li>
+  <li><a href="https://www.binance.com/en/support/announcement/detail/95f5dbe0ea674a48a739b59e046648bf">Binance Agent ID Hackathon announcement</a></li>
+</ul>
+
+<p class="small muted">AgentCard is an independent hackathon project. It is not affiliated with or endorsed by Binance. No returns are promised. Registering costs only network gas.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

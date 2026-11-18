@@ -1,0 +1,8 @@
+node_modules/
+artifacts/
+cache/
+coverage/
+.env
+.env.*
+deployments/testnet-deployer.json
+.DS_Store
