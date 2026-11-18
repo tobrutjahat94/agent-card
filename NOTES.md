@@ -314,3 +314,48 @@ bukan instruksi buat holder):
 - Role flow: a draft may be checked by Claude, but the decision to
   post and the posting itself are done by the human owner of the
   account — never by a bot.
+
+### Lampiran verifikasi (commit #2 + #3, 20:11–20:18 WIB)
+
+- **Commit #2 `38b294d8cb7d8319d81e1bc497776ad38f34685f`**: prompt diisi
+  pin `v1.0` + hash lengkap `bc42cf4da37cbf4f67286765cec1a0d23785387d`.
+  `git diff v1.0 HEAD -- scripts/ docs/app.js` KOSONG — script dan
+  `app.js` di HEAD identik dengan yang di-tag, jadi pin tetap valid
+  walau HEAD sudah maju dua commit. Local HEAD = remote HEAD
+  (`38b294d`), tag `v1.0` = `bc42cf4` di remote.
+- **Cek kebocoran key dari CLONE SEGAR** (clone remote, HEAD `38b294d`,
+  tag `v1.0` ada): `git log --all -- deployments/testnet-deployer.json`
+  → KOSONG (file tidak pernah masuk histori di ref mana pun).
+  `git log --all -p | grep -i "private"` → 53 baris, semuanya prosa:
+  kata "private key" di teks keselamatan ("private key TIDAK PERNAH
+  masuk chat/repo/state file", "Never ask me for my seed phrase,
+  private key..."), nama env var (`MAINNET_PRIVATE_KEY`,
+  `TESTNET_PRIVATE_KEY`), dan placeholder (`<key>`, `<dedicated
+  deployer key, never shared>`). Tidak ada nilai kunci.
+  `git log --all -p | grep -oE "[0-9a-f]{64}"` → KOSONG (tidak ada
+  string 64-hex yang bisa jadi raw private key di seluruh histori).
+  GitHub secret scanning API
+  (`gh api repos/tobrutjahat94/agent-card/secret-scanning/alerts`) → 0
+  alert. Repo: public, secret_scanning enabled, push protection
+  enabled. Key testnet yang sempat tampil di output sesi revisi
+  sebelumnya tetap dianggap bocor (testnet saja, jangan dipakai ulang)
+  — tapi bukti di atas menunjukkan key itu tidak pernah masuk repo.
+- **Push vs snapshot cache user (sisi server).** README via
+  raw.githubusercontent.com (main, bukan Pages/cache): "14 unit tests"
+  (baris 154) + "14/14 passing" (baris 170); gas deploy 1,411,386,
+  register 195,091; "normal wallet" 1 kemunculan, baris 11, sebagai
+  penolakan ("There is no 'register from a normal wallet on the
+  website' path") — bukan jalur register; tidak ada "11 tests", tidak
+  ada gas lama 1,307,491 / 195,038. Prompt remote berisi `v1.0` +
+  hash lengkap `bc42cf4…`. Jadi versi yang di-push memang beda dari
+  snapshot lama yang dilihat user (2 commit, "11 tests", gas lama).
+- **GitHub Pages.** HTTP 200 ×3 (index, AGENT-GUIDE.md,
+  HOLDER-AGENT-PROMPT.md). Konten sempat menyajikan build lama
+  (`CHUNK = 100000`, tanpa pin) — lag rebuild Pages; dicek ulang
+  20:18 WIB (~3 menit kemudian): build baru live (hash pin ada di
+  prompt, `LOG_CHUNKS` ada di app.js). `index.html` menyajikan ethers
+  dipin `6.13.2` di kedua build (tidak berubah).
+- **Kontrak/test tidak tersentuh:** `git diff --stat -- contracts/
+  test/` kosong di seluruh batch ini; `npx hardhat test` 14/14
+  (dijalankan ulang 20:11 WIB). Tidak ada deploy, submit, atau
+  signing di sesi ini.
