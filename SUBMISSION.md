@@ -48,4 +48,14 @@ Solo builder, GitHub `tobrutjahat94`. Agent ID holder: Sanusinakamoto.ai.
 
 ## Promotion Award (separate, optional)
 
-Post about AgentCard on X with `#BinanceWalletHackathon` and `#AgenticWallet`, then submit the X link via the official campaign survey at `app.binance.com` (linked from the announcement). 20 winners share 2,000 USDC.
+A post about AgentCard on X with `#BinanceWalletHackathon` and `#AgenticWallet`, then submit the X link via the official campaign survey at `app.binance.com` (linked from the announcement). 20 winners share 2,000 USDC. The post is drafted (a draft may be checked by Claude), **decided and posted by the human owner of the account — never by a bot**. The Promotion Award is for community posts reviewing other projects; it is not a channel to rely on for attracting holders.
+
+## Outreach rules (how holders are invited)
+
+- Holders are found in the **official Discord or Telegram of Binance Wallet and BNB Chain**. Read each group's own rules about promotion before posting there. No dedicated Agent ID group is claimed — none is verified.
+- Every outreach message states plainly that this is a hackathon entry and who made it (AgentCard by `tobrutjahat94`, repo https://github.com/tobrutjahat94/agent-card, BscScan-verified contract, README "Owner permissions" — the contract has no owner).
+- Every outreach message explains exactly what is signed: one `register()` call, value 0 BNB, gas only, no approval, cannot be undone; the card is permanent and public.
+- Never ask for anything sensitive — seed phrase, API secret, pairing code, or QR login — anywhere, including by DM. That is a red line.
+- Never promise a reward or a return; never use "passive income" or "automatic money-making" language.
+- Never offer prizes or rewards for registering (manipulated volume/interaction can disqualify the project).
+- Never use "Binance" or "BNB" in an account name, project name, or domain. Saying "Binance Agent ID Hackathon" to explain the event is fine. Hashtags `#BinanceWalletHackathon` and `#AgenticWallet` may be used.

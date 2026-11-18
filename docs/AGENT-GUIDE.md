@@ -112,7 +112,11 @@ does all of that. Copy the whole block from
 [`HOLDER-AGENT-PROMPT.md`](HOLDER-AGENT-PROMPT.md) and paste it to your agent,
 filling in your token number, your endpoint, and your message first.
 
-What your agent will do (you do not need to do any of this yourself):
+What your agent will do (you do not need to do any of this yourself).
+Your agent prepares everything and shows it to you; **you** decide and
+**you** confirm in the App. Your agent never posts anything on your behalf:
+a public post may be checked by Claude, but the decision to post and the
+posting itself are done by you, the human owner of the account.
 
 1. Check your wallet settings and confirm Developer Mode is on.
 2. Build the registration transaction and dry-run it, so you know before anything is signed whether it would succeed.
@@ -132,6 +136,48 @@ ask the project team (see Troubleshooting).
 1. Open the transaction hash on BscScan. It should show **Success**.
 2. Open the AgentCard website → Directory. Your card appears with your wallet address, token number, endpoint, and message.
 3. Done. There is nothing else to do — no check-in tomorrow, no upkeep.
+
+---
+
+## Inviting other holders — safe outreach (read this before you post anywhere)
+
+AgentCard needs at least 30 Agent ID addresses to qualify for the Innovation
+Award. The most sensible place to find other holders is the **official
+Discord or Telegram of Binance Wallet and BNB Chain**. There is no verified
+dedicated Agent ID group claimed here — if someone tells you there is one,
+check it yourself before trusting it. **Read each group's own rules about
+promotion before you post anything in it.** If a group forbids promotion,
+do not post there.
+
+Who does what: a draft message may be **checked by Claude**, but the
+decision to post and the posting itself are done by **you, the human owner
+of the account — never by a bot**. The same applies to every public post
+about this project.
+
+When you invite others, follow this checklist (it is a condition of
+running this outreach, not a suggestion):
+
+- **Say plainly this is a hackathon entry, and who made it.** Include the
+  repo link (https://github.com/tobrutjahat94/agent-card), the contract
+  address once it is **verified on BscScan**, and a pointer to the README
+  section "Owner permissions" (the contract has no owner at all).
+- **Explain exactly what is signed:** one `register()` call, value **0 BNB**,
+  gas only, **no approval** of any spending, and it **cannot be undone**.
+  The card is **permanent and public**.
+- **Never ask for anything sensitive — anywhere, including by DM:** no seed
+  phrase, no API secret, no pairing code, no QR login. That is a red line.
+  Anyone asking for those in AgentCard's name is a scam.
+- **Never promise a reward or a return.** Do not use "passive income" or
+  "automatic money-making" language anywhere in project communication.
+- **Do not offer prizes or rewards for registering.** Paying people to
+  register can be read as manipulated volume/interaction and can get the
+  project disqualified.
+- **Names and domains:** do not use "Binance" or "BNB" in an account name,
+  project name, or domain. Saying "Binance Agent ID Hackathon" to explain
+  which event this is for is fine.
+- **Hashtags:** `#BinanceWalletHackathon` and `#AgenticWallet` may be used.
+  Note the separate 2,000 USDC Promotion Award is for community posts
+  reviewing other projects — do **not** rely on it to attract holders.
 
 ---
 

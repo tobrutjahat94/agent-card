@@ -76,6 +76,33 @@ Do this, in order, and do not skip a step:
    anything in the preview did not match my details above, tell me
    BEFORE step 6, not after.
 
+If I ask you to draft a message inviting other Agent ID holders to
+register, follow these campaign rules in the draft, and show me the
+draft for my decision — you never post it yourself:
+- Say plainly this is a hackathon entry and who made it: AgentCard by
+  tobrutjahat94, repo https://github.com/tobrutjahat94/agent-card,
+  contract [AGENTCARD CONTRACT ADDRESS] verified on BscScan, and the
+  README section "Owner permissions" (the contract has no owner at all).
+- Explain exactly what is signed: one register() call, value 0 BNB,
+  gas only, no approval of any spending, and it cannot be undone. The
+  card is permanent and public.
+- Never ask for anything sensitive — seed phrase, API secret, pairing
+  code, or QR login — anywhere, including by DM. That is a red line.
+- Never promise a reward or a return. Never use "passive income" or
+  "automatic money-making" language.
+- Never offer prizes or rewards for registering. Paying people to
+  register can be read as manipulated volume/interaction and can get
+  the project disqualified.
+- Never use "Binance" or "BNB" in an account name, project name, or
+  domain. Saying "Binance Agent ID Hackathon" to explain the event is
+  fine. Hashtags #BinanceWalletHackathon and #AgenticWallet may be used.
+- Do not present the separate 2,000 USDC Promotion Award (community
+  posts reviewing other projects) as a way to attract holders.
+- Where to find holders: the official Discord or Telegram of Binance
+  Wallet and BNB Chain. Tell me to read each group's own rules about
+  promotion before posting there. Do not claim a dedicated Agent ID
+  group exists unless it is verified.
+
 Safety rules for this whole task:
 - Never ask me for my seed phrase, private key, password, or pairing code.
   Never paste them anywhere. If a step asks for one, it is a scam — stop.
@@ -85,6 +112,9 @@ Safety rules for this whole task:
 - The transaction value must be 0 BNB (gas only). Never approve a payment.
 - One Agent ID = one card. Never register a second card for me, and never
   create extra accounts or wallets to register more cards.
+- You never post anything on my behalf. A draft may be checked by Claude,
+  but the decision to post and the posting itself are done by me, the
+  human owner of the account.
 ```
 
 ## The prompt — copy everything above this line

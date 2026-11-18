@@ -201,6 +201,8 @@ Holder-supplied endpoint/message text is rendered with `textContent` only
 - No QR-code login, no session storage, no prompts that bypass transaction confirmation, no hidden approvals, no collection of seeds/keys/API secrets.
 - No promises of returns.
 - Project name, token name and domain do not use "Binance" or "BNB".
+- **Role flow for every public post:** a draft may be checked by Claude, but the decision to post and the posting itself are done by the human owner of the account — never by a bot.
+- **Safe outreach (see `docs/AGENT-GUIDE.md` for the full checklist):** every outreach message states plainly this is a hackathon entry and who made it (repo link, BscScan-verified contract, README "Owner permissions"); explains exactly what is signed (one `register()`, 0 BNB, gas only, no approval, cannot be undone; card permanent and public); never asks for anything sensitive (seed phrase, API secret, pairing code, QR login — anywhere, including by DM); never promises a reward or return, never uses "passive income" / "automatic money-making" language; never offers prizes for registering; never uses "Binance" or "BNB" in an account/project/domain name (saying "Binance Agent ID Hackathon" to explain the event is fine). Holders are found in the official Discord or Telegram of Binance Wallet and BNB Chain — read each group's promotion rules first; no dedicated Agent ID group is claimed.
 
 ## Links
 
