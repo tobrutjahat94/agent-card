@@ -11,8 +11,8 @@
 // eth_getLogs from this VM (code -32005), so this helper may fail here even
 // with retries. The RELIABLE path for a holder is BscScan: open your address
 // page -> "ERC-721 Token Txns" tab -> the Agent ID transfer shows the tokenId.
-// The website's auto-detect runs the same scan in the visitor's browser
-// against their own wallet RPC, where the limit does not apply.
+// (The AgentCard website is a read-only directory — it has no auto-detect
+// and never connects a wallet.)
 const { ethers } = require("ethers");
 
 const AGENT_ID = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f";

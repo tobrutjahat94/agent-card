@@ -29,13 +29,14 @@ AgentCard is a one-shot on-chain registry for Agent ID holders. Each holder regi
 
 - **Gate + binding:** the contract requires `balanceOf(msg.sender) > 0` on the official Agent ID contract **and** `ownerOf(tokenId) == msg.sender`, so the card is bound to the holder's specific Agent ID token — proof of ownership of that token, not just "holds any ID".
 - **Identity as data:** the card stores the Agent ID tokenId, a public agent endpoint, and a short message on-chain, forming a public directory of agents keyed by Agent ID. One Agent ID = one card (enforced on-chain; Agent IDs are one per user and non-transferable, so there is no farming surface).
-- **Why one-shot:** the Agentic Wallet does not sign arbitrary contract calls by default; custom calls need Developer Mode (manual opt-in in the App, 7-day expiry, per-operation confirmation). A daily check-in is unrealistic under those constraints, so the product is a single registration done through Developer Mode (`baw contract-call preview` → `execute`) or from a normal wallet on the website.
+- **Why one-shot:** the Agentic Wallet does not sign arbitrary contract calls by default; custom calls need Developer Mode (manual opt-in in the App, 7-day expiry, per-operation confirmation). A daily check-in is unrealistic under those constraints, so the product is a single registration done through Developer Mode (`baw contract-call preview` → `execute`) by the holder's own AI agent. There is no website-register path: the website is a read-only directory, because Agent ID holders keep their wallet in the Binance App and a browser "connect wallet" button cannot reach them.
 - **No name lookup:** no `.ai` name is stored on-chain and there is no name → address search in the contract or the UI, per the hackathon rules. The Agent ID contract has no on-chain enumeration (`tokenOfOwnerByIndex` does not exist), so holders find their tokenId off-chain (BscScan "ERC-721 Token Txns") and the contract verifies ownership.
+- **Finding peers (practicality):** any agent can find a peer with one on-chain read — `endpointOf(address)` returns that agent's public endpoint, and `getCard(address)` returns the full card (token number, endpoint, message, registration time). Example: pick a wallet from the directory, call `endpointOf` for it, fetch the returned `https://` endpoint — that is the peer agent.
 
 ## Awards targeted
 
-- **Agent ID Ecosystem Pioneer Award** (usage ranking: interacting Agent ID addresses, tx count/volume) — needs holders to register during the submission period.
-- **Agent Application Innovation Award** (judge panel, 100 points: Agent ID depth 30%, practicality 25%, completion 25%, innovation 20%) — needs the product live + at least **30 Agent ID addresses** interacting during the submission period.
+- **Agent Application Innovation Award (primary target)** (judge panel, 100 points: Agent ID depth 30%, practicality 25%, completion 25%, innovation 20%) — needs the product live + at least **30 Agent ID addresses** interacting during the submission period.
+- **Agent ID Ecosystem Pioneer Award (secondary — hard to chase)** (usage ranking: interacting Agent ID addresses, tx count/volume) — needs holders to register during the submission period. One-shot registration means roughly one transaction per holder, so the tx/volume ranking is difficult to win with this design; the realistic goal is the address count, not the volume rank.
 
 ## Reward receiving address
 

@@ -28,6 +28,13 @@ async function main() {
   const regReceipt = await regTx.wait();
   console.log("register gas:", regReceipt.gasUsed.toString());
 
+  // endpointOf is a view call (no gas on-chain), but confirm it reads
+  // back the registered endpoint — the peer-discovery path.
+  console.log(
+    "endpointOf(deployer):",
+    await card.endpointOf(deployer.address)
+  );
+
   const deployGas = Number(cardReceipt.gasUsed);
   const regGas = Number(regReceipt.gasUsed);
   for (const gwei of [1, 3, 5]) {

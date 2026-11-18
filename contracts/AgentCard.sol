@@ -78,6 +78,10 @@ contract AgentCard {
             cardOwnerByToken[tokenId] == address(0),
             "AgentCard: this Agent ID already has a card"
         );
+        // An empty endpoint makes a permanent, useless card (a card can
+        // never be changed or deleted), so refuse it here. The message
+        // may be empty — the endpoint is the functional part of a card.
+        require(bytes(endpoint).length > 0, "AgentCard: endpoint empty");
         require(
             bytes(endpoint).length <= MAX_ENDPOINT_BYTES,
             "AgentCard: endpoint too long"
@@ -104,6 +108,14 @@ contract AgentCard {
             message,
             block.timestamp
         );
+    }
+
+    /// @notice Just the public endpoint of `owner`'s card.
+    /// @dev Convenience read for other agents discovering peers: one
+    ///      call, one value, no need to unpack the full card. Returns
+    ///      an empty string when `owner` has no card.
+    function endpointOf(address owner) external view returns (string memory) {
+        return cards[owner].endpoint;
     }
 
     /// @notice Full card for `owner` in one call.

@@ -1,4 +1,16 @@
-// AgentCard frontend — static, no backend, no tracking.
+// AgentCard directory — READ-ONLY.
+// This site never asks you to connect a wallet or sign anything.
+// Registration happens only through your own AI agent in the Binance
+// App (Developer Mode) — see docs/AGENT-GUIDE.md and
+// docs/HOLDER-AGENT-PROMPT.md. This page only READS the on-chain
+// directory and displays it.
+//
+// Rendering rule (security): holder endpoint/message text is permanent,
+// user-supplied on-chain text. It is rendered with textContent only —
+// never innerHTML. A link is created ONLY when the endpoint starts with
+// "https://", with rel="noopener noreferrer". Anything else is shown
+// as plain text, never as a link.
+
 // Fill in the contract addresses after deploy (see README.md).
 const CONFIG = {
   56: {
@@ -7,6 +19,7 @@ const CONFIG = {
     agentCard: "0x0000000000000000000000000000000000000000", // TODO: fill after mainnet deploy
     deployBlock: 0, // TODO: AgentCard deployment block (mainnet)
     explorer: "https://bscscan.com",
+    rpc: "https://bsc-dataseed.binance.org",
   },
   97: {
     chainName: "BSC Testnet",
@@ -14,61 +27,113 @@ const CONFIG = {
     agentCard: "0x0000000000000000000000000000000000000000", // TODO: fill after testnet deploy
     deployBlock: 0,
     explorer: "https://testnet.bscscan.com",
+    rpc: "https://data-seed-prebsc-1-s1.binance.org:8545",
   },
 };
 
-const AGENT_ID_ABI = [
-  "function balanceOf(address) view returns (uint256)",
-  "function ownerOf(uint256) view returns (address)",
-  "function tokenURI(uint256) view returns (string)",
-];
 const CARD_ABI = [
-  "function register(uint256 tokenId, string endpoint, string message)",
   "function hasCard(address) view returns (bool)",
   "function getCard(address) view returns (uint256 tokenId, string endpoint, string message, uint256 registeredAt)",
+  "function endpointOf(address) view returns (string)",
   "function totalCards() view returns (uint256)",
   "event CardRegistered(address indexed owner, uint256 indexed tokenId, string endpoint, string message, uint256 registeredAt)",
 ];
-const TRANSFER_TOPIC = ethers.id("Transfer(address,address,uint256)");
 const ZERO = "0x0000000000000000000000000000000000000000";
 
-let provider = null;
-let signer = null;
-let account = null;
-let chainId = null;
+// Which network to show: ?chain=56 (default) or ?chain=97.
+const params = new URLSearchParams(window.location.search);
+const chainId = params.get("chain") === "97" ? 97 : 56;
 
 const $ = (id) => document.getElementById(id);
 
 function cfg() {
-  return CONFIG[chainId] || null;
+  return CONFIG[chainId];
 }
 
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function setStatus(text) {
+  $("deployStatus").textContent = text;
 }
 
-async function refreshDeployBanner() {
-  const c = cfg();
-  if (!c) {
-    $("deployStatus").textContent = "unsupported network — switch to BNB Chain (56) or BSC Testnet (97).";
-    return;
-  }
-  if (c.agentCard === ZERO) {
-    $("deployStatus").textContent = "AgentCard is not deployed on " + c.chainName + " yet. Contract deploy is pending — see the GitHub repo for status.";
+function shortAddress(addr) {
+  return addr.slice(0, 6) + "…" + addr.slice(-4);
+}
+
+function isHttpsUrl(s) {
+  return typeof s === "string" && s.startsWith("https://") && s.length <= 200;
+}
+
+function el(tag, text, className) {
+  const n = document.createElement(tag);
+  if (text !== undefined && text !== null) n.textContent = text;
+  if (className) n.className = className;
+  return n;
+}
+
+// One directory row, built with DOM APIs only — no innerHTML, so no
+// holder-supplied text can ever become markup or script.
+function rowElement(c, r) {
+  const tr = document.createElement("tr");
+
+  const walletTd = document.createElement("td");
+  walletTd.className = "addr";
+  const walletLink = document.createElement("a");
+  walletLink.href = c.explorer + "/address/" + r.owner;
+  walletLink.target = "_blank";
+  walletLink.rel = "noopener noreferrer";
+  walletLink.textContent = shortAddress(r.owner);
+  walletTd.appendChild(walletLink);
+  tr.appendChild(walletTd);
+
+  const tokenTd = document.createElement("td");
+  tokenTd.textContent = "#" + r.tokenId;
+  tr.appendChild(tokenTd);
+
+  const cardTd = document.createElement("td");
+  if (isHttpsUrl(r.endpoint)) {
+    const a = document.createElement("a");
+    a.href = r.endpoint;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = r.endpoint;
+    cardTd.appendChild(a);
   } else {
-    $("deployStatus").textContent = "AgentCard is live on " + c.chainName + ": " + c.agentCard;
+    // Not an https:// link: show as plain text, never as a link.
+    cardTd.appendChild(el("span", r.endpoint));
   }
+  cardTd.appendChild(document.createElement("br"));
+  cardTd.appendChild(el("span", r.message, "small muted"));
+  cardTd.appendChild(document.createElement("br"));
+  cardTd.appendChild(
+    el("span", new Date(r.at * 1000).toISOString().slice(0, 10), "small muted")
+  );
+  tr.appendChild(cardTd);
+
+  return tr;
 }
 
 async function refreshDirectory() {
   const c = cfg();
   const box = $("directory");
-  if (!c || c.agentCard === ZERO || !c.deployBlock) {
-    box.innerHTML = "<p class='small muted'>Directory appears once the contract is deployed.</p>";
+  // Clear without innerHTML.
+  while (box.firstChild) box.removeChild(box.firstChild);
+
+  if (c.agentCard === ZERO || !c.deployBlock) {
+    box.appendChild(
+      el("p", "Directory appears once the contract is deployed.", "small muted")
+    );
+    setStatus(
+      "AgentCard is not deployed on " + c.chainName + " yet. Contract deploy is pending — see the GitHub repo for status."
+    );
     return;
   }
+
+  setStatus("AgentCard is live on " + c.chainName + ": " + c.agentCard);
+  box.appendChild(el("p", "Loading…", "small muted"));
+
   try {
+    const provider = new ethers.JsonRpcProvider(c.rpc);
     const card = new ethers.Contract(c.agentCard, CARD_ABI, provider);
+    const total = await card.totalCards();
     const latest = await provider.getBlockNumber();
     const iface = new ethers.Interface(CARD_ABI);
     const rows = [];
@@ -94,139 +159,38 @@ async function refreshDirectory() {
       }
     }
     rows.sort((a, b) => b.block - a.block);
-    if (!rows.length) {
-      box.innerHTML = "<p class='small muted'>No cards registered yet. Be the first.</p>";
-      return;
+
+    while (box.firstChild) box.removeChild(box.firstChild);
+    const countP = el(
+      "p",
+      rows.length
+        ? rows.length + " card(s) on-chain, " + total.toString() + " total."
+        : "No cards registered yet.",
+      "small muted"
+    );
+    box.appendChild(countP);
+    if (!rows.length) return;
+
+    const table = document.createElement("table");
+    const head = document.createElement("tr");
+    for (const h of ["Wallet", "Agent ID token", "Card"]) {
+      head.appendChild(el("th", h));
     }
-    box.innerHTML = "<table><tr><th>Wallet</th><th>Agent ID token</th><th>Card</th></tr>" +
-      rows.map((r) =>
-        "<tr><td class='addr'><a href='" + c.explorer + "/address/" + r.owner + "' target='_blank' rel='noopener'>" +
-        r.owner.slice(0, 6) + "…" + r.owner.slice(-4) + "</a></td>" +
-        "<td>#" + esc(r.tokenId) + "</td>" +
-        "<td><a href='" + esc(r.endpoint) + "' target='_blank' rel='noopener'>" + esc(r.endpoint) + "</a><br>" +
-        "<span class='small muted'>" + esc(r.message) + "</span><br>" +
-        "<span class='small muted'>" + new Date(r.at * 1000).toISOString().slice(0, 10) + "</span></td></tr>"
-      ).join("") + "</table>";
+    table.appendChild(head);
+    for (const r of rows) table.appendChild(rowElement(c, r));
+    box.appendChild(table);
   } catch (e) {
-    box.innerHTML = "<p class='small muted'>Directory could not be loaded from this RPC (" + esc(e.message.slice(0, 120)) + ").</p>";
+    while (box.firstChild) box.removeChild(box.firstChild);
+    box.appendChild(
+      el(
+        "p",
+        "Directory could not be loaded from this RPC (" +
+          String(e.message || e).slice(0, 120) +
+          ").",
+        "small muted"
+      )
+    );
   }
 }
 
-async function onConnect() {
-  if (!window.ethereum) {
-    $("walletInfo").textContent = "No injected wallet found. Install MetaMask or open this page in a wallet browser.";
-    return;
-  }
-  provider = new ethers.BrowserProvider(window.ethereum);
-  try {
-    await provider.send("eth_requestAccounts", []);
-  } catch (e) {
-    $("walletInfo").textContent = "Connection rejected.";
-    return;
-  }
-  signer = await provider.getSigner();
-  account = await signer.getAddress();
-  const net = await provider.getNetwork();
-  chainId = Number(net.chainId);
-  const c = cfg();
-  $("walletInfo").innerHTML = "Connected: <span class='addr'>" + account + "</span> on " + (c ? c.chainName : "chain " + chainId) + ".";
-  $("detectBtn").disabled = false;
-  $("registerBtn").disabled = false;
-  await refreshDeployBanner();
-  if (!c || c.agentId === ZERO || c.agentCard === ZERO) return;
-
-  const agentId = new ethers.Contract(c.agentId, AGENT_ID_ABI, provider);
-  const card = new ethers.Contract(c.agentCard, CARD_ABI, provider);
-  const bal = await agentId.balanceOf(account);
-  $("agentIdInfo").textContent = bal > 0n
-    ? "You hold an Agent ID (balance " + bal.toString() + ")."
-    : "This address holds no Agent ID — registration will revert. Claim one in the Binance App first.";
-  const has = await card.hasCard(account);
-  if (has) {
-    const g = await card.getCard(account);
-    $("registerStatus").innerHTML = "<div class='ok'>You already have a card: token #" + g.tokenId.toString() +
-      " — <a href='" + esc(g.endpoint) + "' target='_blank' rel='noopener'>" + esc(g.endpoint) + "</a> — “" + esc(g.message) + "”</div>";
-    $("registerBtn").disabled = true;
-    // Show your own .ai name (your data only), resolved from your token's metadata.
-    try {
-      const uri = await agentId.tokenURI(g.tokenId);
-      const meta = await (await fetch(uri)).json();
-      if (meta && meta.name) $("ownName").textContent = "Your Agent ID: " + meta.name;
-    } catch (e) { /* name is optional; tokenId alone identifies the card */ }
-  }
-}
-
-async function onDetect() {
-  const c = cfg();
-  if (!c || c.agentId === ZERO) return;
-  $("detectStatus").textContent = "scanning Transfer events… (best effort; if it fails, paste the tokenId from BscScan)";
-  try {
-    const latest = await provider.getBlockNumber();
-    const CHUNK = 100000;
-    let from = Math.max(latest - 2000000, 0);
-    for (; from <= latest; from += CHUNK) {
-      const to = Math.min(from + CHUNK - 1, latest);
-      const logs = await provider.getLogs({
-        address: c.agentId,
-        topics: [TRANSFER_TOPIC, null, ethers.zeroPadValue(account.toLowerCase(), 32)],
-        fromBlock: from,
-        toBlock: to,
-      });
-      if (logs.length) {
-        const tokenId = BigInt(logs[0].topics[3]).toString();
-        $("tokenId").value = tokenId;
-        $("detectStatus").textContent = "found tokenId " + tokenId + " (block " + logs[0].blockNumber + ").";
-        return;
-      }
-    }
-    $("detectStatus").textContent = "not found in the last ~2M blocks — paste it from BscScan (address page → ERC-721 Token Txns).";
-  } catch (e) {
-    $("detectStatus").textContent = "auto-detect failed on this RPC (" + e.message.slice(0, 100) + ") — paste the tokenId from BscScan.";
-  }
-}
-
-async function onRegister() {
-  const c = cfg();
-  if (!c || c.agentCard === ZERO) {
-    $("registerStatus").textContent = "Contract not deployed on this network yet.";
-    return;
-  }
-  const tokenId = $("tokenId").value.trim();
-  const endpoint = $("endpoint").value.trim();
-  const message = $("message").value.trim();
-  if (!/^\d+$/.test(tokenId)) { $("registerStatus").textContent = "Enter your numeric Agent ID tokenId."; return; }
-  if (endpoint.length > 200) { $("registerStatus").textContent = "Endpoint is over 200 characters."; return; }
-  if (message.length > 280) { $("registerStatus").textContent = "Message is over 280 characters."; return; }
-  $("registerStatus").textContent = "Check the transaction in your wallet, then confirm. One registration only — it cannot be changed.";
-  try {
-    const agentId = new ethers.Contract(c.agentId, AGENT_ID_ABI, provider);
-    const owner = await agentId.ownerOf(tokenId);
-    if (owner.toLowerCase() !== account.toLowerCase()) {
-      $("registerStatus").textContent = "That tokenId belongs to a different address (" + owner + ").";
-      return;
-    }
-    const card = new ethers.Contract(c.agentCard, CARD_ABI, signer);
-    const tx = await card.register(tokenId, endpoint, message);
-    $("registerStatus").textContent = "Transaction sent: " + tx.hash + " — waiting for confirmation…";
-    const receipt = await tx.wait();
-    if (receipt.status === 1) {
-      $("registerStatus").innerHTML = "<div class='ok'>Card registered! Tx <a href='" + c.explorer + "/tx/" + tx.hash + "' target='_blank' rel='noopener'>" + tx.hash.slice(0, 18) + "…</a></div>";
-      $("registerBtn").disabled = true;
-      await refreshDirectory();
-    } else {
-      $("registerStatus").textContent = "Transaction reverted on-chain.";
-    }
-  } catch (e) {
-    $("registerStatus").textContent = "Failed: " + (e.reason || e.message || e).toString().slice(0, 240);
-  }
-}
-
-$("connectBtn").addEventListener("click", onConnect);
-$("detectBtn").addEventListener("click", onDetect);
-$("registerBtn").addEventListener("click", onRegister);
-if (window.ethereum) {
-  window.ethereum.on("accountsChanged", () => location.reload());
-  window.ethereum.on("chainChanged", () => location.reload());
-}
-refreshDeployBanner();
 refreshDirectory();

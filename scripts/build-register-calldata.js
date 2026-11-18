@@ -3,12 +3,15 @@
 // Also dry-runs the call with eth_call (staticCall) so the holder knows
 // BEFORE previewing whether register() would succeed.
 // Read-only: no keys, no signing, no transactions.
+// This script is run by the HOLDER'S OWN AI AGENT (see
+// docs/HOLDER-AGENT-PROMPT.md). The holder never runs it themselves:
+// they paste one prompt to their agent, and the agent runs this.
 // Usage:
 //   node scripts/build-register-calldata.js \
 //     --from <your agentic wallet address> \
 //     --to <AgentCard contract address> \
 //     --tokenId <your Agent ID token id> \
-//     --endpoint <public agent endpoint URL> \
+//     --endpoint <public agent endpoint URL, https:// only> \
 //     --message <short public message> [--rpc <bsc rpc url>]
 const { ethers } = require("ethers");
 
@@ -16,6 +19,7 @@ const ABI = [
   "function register(uint256 tokenId, string endpoint, string message)",
   "function hasCard(address) view returns (bool)",
   "function getCard(address) view returns (uint256,string,string,uint256)",
+  "function endpointOf(address) view returns (string)",
   "function agentId() view returns (address)",
 ];
 const AGENT_ID = "0x60b9262456de011f7d15a54cdd8c48baaa8b022f";
@@ -47,10 +51,28 @@ async function main() {
   }
   if (endpoint.length > 200) throw new Error("endpoint > 200 bytes");
   if (message.length > 280) throw new Error("message > 280 bytes");
+  // The directory only links https:// endpoints. Refuse anything else
+  // here, before the holder signs — a javascript:/http: endpoint would
+  // be stored forever and shown as plain text at best, a phishing
+  // vector at worst.
+  if (!endpoint.startsWith("https://")) {
+    throw new Error("endpoint must start with https://");
+  }
 
   const provider = new ethers.JsonRpcProvider(rpc);
   const card = new ethers.Contract(to, ABI, provider);
   const agentId = new ethers.Contract(AGENT_ID, AGENT_ID_ABI, provider);
+
+  // The deployed card must point at the OFFICIAL Agent ID contract.
+  // A card deployed with any other address is a different, wrong
+  // deployment — stop before the holder signs anything to it.
+  const cardAgentId = await card.agentId();
+  if (cardAgentId.toLowerCase() !== AGENT_ID.toLowerCase()) {
+    throw new Error(
+      `AgentCard.agentId() is ${cardAgentId}, expected official Agent ID ${AGENT_ID}. Wrong deployment — do NOT register here.`
+    );
+  }
+  console.log("AgentCard.agentId() OK (official Agent ID):", cardAgentId);
 
   console.log("Holder:", from);
   console.log("AgentCard:", to);
@@ -81,7 +103,10 @@ async function main() {
   );
   console.log("3. After a clear YES on the preview, execute with the requestId:");
   console.log("   baw contract-call execute --requestId <requestId from preview> --json");
-  console.log("4. Check the receipt, then verify your card on the AgentCard site.");
+  console.log("4. Check the receipt, then verify the card on-chain:");
+  console.log(`   endpointOf(${from}) and getCard(${from}) on the AgentCard contract,`);
+  console.log("   plus the BscScan transaction link. The directory on the");
+  console.log("   AgentCard site (read-only) will list the card once indexed.");
 }
 
 main().catch((e) => {

@@ -53,6 +53,94 @@
 6. Submit via "Submit Project Now" on the official announcement page (fill `SUBMISSION.md`, incl. reward receiving address). Deadline 9 Dec 15:00 WIB.
 7. Optional: X post for the Promotion Award (#BinanceWalletHackathon + #AgenticWallet, submit link via app.binance.com survey).
 
+## 2026-11-18 ~19:30–19:45 WIB — Revisi pasca-review user (11 poin, semua dikerjakan)
+
+User review 19:30 WIB: kontrak sehat, repo + README cocok, tapi user belum
+compile/test dan belum lihat scripts/ maupun docs/app.js. Semua poin di bawah
+dikerjakan di repo yang sama, lalu push (lihat commit di akhir entri).
+
+1. **Opsi "normal wallet" dihapus.** AGENT-GUIDE (Option A), SUBMISSION.md,
+   dan README tidak lagi menawarkan register dari website lewat normal wallet.
+   Keputusan konsisten: **website = direktori read-only saja**, tidak pernah
+   minta connect wallet / sign. Register hanya lewat agent pemegang di
+   Binance App (Developer Mode).
+2. **Guide non-teknis + prompt agent.** AGENT-GUIDE.md ditulis ulang:
+   langkah pemegang = aktifkan Developer Mode + set Abnormal Handling +
+   cari tokenId di BscScan + paste satu prompt ke agent + konfirmasi di App.
+   File baru `docs/HOLDER-AGENT-PROMPT.md`: satu blok prompt tinggal paste,
+   agent-nya yang install skill, cek settings, bangun calldata, preview,
+   dan execute setelah konfirmasi eksplisit pemegang.
+3. **Abnormal Transaction Handling.** Masuk Step 1 guide + troubleshooting
+   (`351803`): set ke **Need Confirmation**, bukan Auto Reject — kontrak
+   baru yang belum dikenal bisa dianggap abnormal oleh risk engine.
+   Sumber: Flap docs (https://docs.flap.sh/en/flap/skills/using-with-binance-agentic-wallet
+   — halaman ditandai **archived** oleh Flap, bisa out of date) +
+   Binance Blog "Agentic Wallet Controls"
+   (https://www.binance.com/en-NG/blog/tech/7276731523787720812 — risk score
+   ≥4 dikirim ke App untuk konfirmasi atau auto-reject tergantung setting
+   abnormal transaction). Label persis di App diminta dikonfirmasi saat tes.
+4. **Verifikasi BscScan.** README + hardhat.config.js diperbaiki: syarat =
+   halaman kontrak BscScan menunjukkan **"Source Code Verified"**;
+   Sourcify saja TIDAK cukup; `hardhat verify` butuh BSCSCAN_API_KEY
+   (gratis, dari akun BscScan); kalau gagal, manual "Verify & Publish".
+   Undang pemegang lain HANYA setelah verifikasi beres. Tabel status diupdate.
+5. **Private key inline dihapus.** Semua contoh `KEY=... command` dihapus
+   dari README/docs. Pengganti: file `.env` (git-ignored) atau prompt
+   `read -s`, lalu `unset` + `history -c`. `scripts/deploy-mainnet.js`
+   diperbarui + cek pasca-deploy `agentId()` harus persis
+   `0x60b9262456de011f7d15a54cdd8c48baaa8b022f` (dan
+   `scripts/build-register-calldata.js` menolak deploy dengan agentId lain).
+6. **Audit website.** `docs/app.js` + `docs/index.html` ditulis ulang jadi
+   direktori read-only: tanpa connect/register/auto-detect; rendering hanya
+   DOM + `textContent` (nol `innerHTML` di luar komentar); link hanya bila
+   endpoint diawali `https://`, dengan `rel="noopener noreferrer"`.
+   Temuan audit: app.js lama pakai `innerHTML` untuk tabel direktori +
+   status (endpoint/message di-escape tapi scheme tidak divalidasi, jadi
+   `javascript:` bisa jadi href; `rel` cuma `noopener`). Semua diperbaiki.
+7. **endpointOf.** `function endpointOf(address) view returns (string)`
+   ditambah ke AgentCard.sol + 2 test baru. Gas deploy naik 1.307.491 →
+   1.411.386 (final, termasuk guard poin 12).
+8. **Peer discovery.** Tiga baris contoh (`endpointOf` / `getCard` / fetch
+   endpoint) masuk README + AGENT-GUIDE + SUBMISSION.md. Target utama =
+   Innovation Award; Pioneer sekunder/sulit (one-shot ≈ 1 tx/holder).
+9. **Kartu pertama.** Ditulis sebagai placeholder yang diisi user sendiri
+   (Sanusinakamoto.ai, endpoint + message pilihan dia, permanen). Tidak ada
+   endpoint/message yang diisi bot.
+10. **Sumber Developer Mode per fakta.** Semua fakta di guide diberi sumber
+    di tempat: 7 hari + extends + langkah enable + `baw wallet settings` +
+    351802/351804/351805 (Binance skills-hub `external-sign.md`); limit
+    1.000/5.000/10.000/50.000 + balance cap 10.000 USDT + auto-disable 7
+    hari + risk score ≥4 (Binance Blog "Agentic Wallet Controls"); 351801 +
+    351807 (Binance skills-hub `agent-id-exclusive-token-launches.md`);
+    351803 (external-sign.md); Developer Mode = custom contract calls +
+    risiko (Binance FAQ Agentic Wallet). Tidak ada halaman resmi standalone
+    "Developer Mode" yang bisa dibuka — sumber terdekat adalah Blog/FAQ/
+    skills-hub resmi Binance di atas. Tidak ada fakta yang ditandai
+    UNVERIFIED karena semuanya bersumber; yang ditandai hati-hati adalah
+    label persis "Abnormal Transaction Handling" di App (sumber Flap,
+    archived) — diminta konfirmasi di App saat tes.
+11. **Klaim test + 4 exit-1 lama.** `npx hardhat test` dijalankan ulang
+    sendiri di sesi ini: **14/14 passing, exit 0** (lihat NOTES bawah).
+    Empat exec exit-1 builder + satu browser_open gagal ditelusuri lewat
+    `muse.db` (child `8f4938e4-…`): (a) probe eth_getCode #1 gagal —
+    RPC tanpa field `result` (KeyError); (b) probe eth_getCode #2 gagal —
+    RPC error -32000 `missing trie node`; (c) BscScan API getabi/
+    getsourcecode — Cloudflare 301 HTML, JSON decode gagal; (d) BscScan
+    halaman kontrak — HTTP 403; (e) probe Transfer-events — 0 event dalam
+    3.000 blok terakhir, IndexError. Semuanya probe riset/ABI, BUKAN
+    compile/test — tidak satu pun menyentuh `npx hardhat test`. Klaim
+    test didukung run baru 14/14 di sesi ini, bukan kata builder.
+12. **Perubahan kontrak batch terakhir (tambahan, sebelum push final).**
+    Selain `endpointOf`, ditambahkan guard `require(endpoint non-empty)`:
+    kartu permanen dengan endpoint kosong = kartu tidak berguna selamanya.
+    Message boleh kosong (endpoint adalah bagian fungsional). 1 test baru.
+    Dipertimbangkan dan TIDAK dimasukkan: validasi `https://` on-chain
+    (agen bisa pakai endpoint non-HTTPS yang sah, mis. wss://; kebijakan
+    https hanya di UI + script calldata), helper `messageOf`/`tokenIdOf`
+    (sudah tercakup `getCard`), dan enumerasi on-chain (tidak mungkin
+    tanpa mengubah desain; direktori dibaca dari event). Kontrak tetap
+    minimal: tidak ada dana/admin/pause/mint.
+
 ## 2026-11-18 ~19:17 — CORRECTION: deploy approval is NOT from chat (user steer)
 - Persetujuan/eksekusi deploy mainnet BUKAN sesuatu yang bisa diberikan lewat chat — itu keputusan dan tindakan langsung manusia pemilik wallet. Semua framing "menunggu persetujuan user (chat)" dihapus dari README, SUBMISSION.md, AGENT-GUIDE.md, NOTES.md, dan header `scripts/deploy-mainnet.js`; diganti "deploy dieksekusi langsung oleh manusia pemilik wallet, berdasarkan materi yang disiapkan di sini".
 - Syarat persiapan deploy masuk README ("Deploy preparation"): (1) wallet deployer khusus baru, saldo BNB secukupnya buat gas saja, BUKAN wallet utama; private key TIDAK PERNAH masuk chat/repo/state file. (2) Verifikasi source di BscScan langsung setelah deploy (syarat eligibility). (3) Owner permissions di README — kontrak tidak punya fungsi owner sama sekali (ditulis eksplisit). (4) Jangan ubah kontrak setelah ada interaksi (alamat baru = hitungan mulai nol; testnet dipakai habis-habisan buat logika). (5) SATU KONTRAK SAJA (satu tim satu proyek, cuma alamat yang disubmit yang dihitung).

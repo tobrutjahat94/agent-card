@@ -105,6 +105,43 @@ describe("AgentCard", function () {
     expect(await card.totalCards()).to.equal(1);
   });
 
+  it("reverts on an empty endpoint (a permanent card must point somewhere)", async function () {
+    const { card, user1 } = await loadFixture(deployFixture);
+    await expect(
+      card.connect(user1).register(1, "", "no endpoint")
+    ).to.be.revertedWith("AgentCard: endpoint empty");
+    // An empty message is allowed — the endpoint is the functional part.
+    await card.connect(user1).register(1, "https://agent.example/alice", "");
+    expect(await card.endpointOf(user1.address)).to.equal(
+      "https://agent.example/alice"
+    );
+  });
+
+  it("endpointOf returns the registered endpoint, empty before registering", async function () {
+    const { card, user1, user2 } = await loadFixture(deployFixture);
+    expect(await card.endpointOf(user1.address)).to.equal("");
+    await card
+      .connect(user1)
+      .register(1, "https://agent.example/alice", "Alice's helper agent");
+    expect(await card.endpointOf(user1.address)).to.equal(
+      "https://agent.example/alice"
+    );
+    expect(await card.endpointOf(user2.address)).to.equal("");
+  });
+
+  it("endpointOf matches getCard for every registered holder", async function () {
+    const { card, user1, user2 } = await loadFixture(deployFixture);
+    await card.connect(user1).register(1, "https://a.example", "alice");
+    await card.connect(user2).register(2, "https://b.example", "bob");
+    for (const [user, endpoint] of [
+      [user1, "https://a.example"],
+      [user2, "https://b.example"],
+    ]) {
+      expect(await card.endpointOf(user.address)).to.equal(endpoint);
+      expect((await card.getCard(user.address)).endpoint).to.equal(endpoint);
+    }
+  });
+
   it("different users register independent cards", async function () {
     const { card, user1, user2 } = await loadFixture(deployFixture);
     await card.connect(user1).register(1, "https://a.example", "alice");

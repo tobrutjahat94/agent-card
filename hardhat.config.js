@@ -25,13 +25,21 @@ module.exports = {
     },
   },
   etherscan: {
-    // BscScan verification. Leave BSCSCAN_API_KEY empty to use Sourcify only.
+    // BscScan verification. BSCSCAN_API_KEY is REQUIRED for the
+    // contract page on BscScan to show "Source Code Verified" — that
+    // is the hackathon eligibility requirement. Sourcify alone is NOT
+    // enough. Get a free key from your BscScan account and set it via
+    // env (never commit it): BSCSCAN_API_KEY=<key> — same safe
+    // handling as the deployer key (hidden prompt or git-ignored
+    // .env file, never on a command line).
     apiKey: {
       bscTestnet: process.env.BSCSCAN_API_KEY || "",
       bsc: process.env.BSCSCAN_API_KEY || "",
     },
   },
   sourcify: {
+    // Supplemental only. Sourcify verification does NOT satisfy the
+    // BscScan "Source Code Verified" requirement.
     enabled: true,
   },
 };
