@@ -16,9 +16,9 @@ AgentCard
 
 | Network | Contract | Address |
 | --- | --- | --- |
-| BNB Chain mainnet (56) | AgentCard | `TODO — after mainnet deploy (awaiting user approval)` |
+| BNB Chain mainnet (56) | AgentCard | `TODO — deployed directly by the wallet owner (see README "Deploy preparation")` |
 | BNB Chain mainnet (56) | Agent ID (official, used by AgentCard) | `0x60b9262456de011f7d15a54cdd8c48baaa8b022f` |
-| BSC testnet (97) | AgentCard | `TODO — after testnet deploy (awaiting ~0.05 tBNB funding)` |
+| BSC testnet (97) | AgentCard | `TODO — after testnet deploy (needs ~0.05 tBNB funding)` |
 | BSC testnet (97) | MockAgentID (test only) | `TODO` |
 
 Source code: <https://github.com/tobrutjahat94/agent-card> (public, MIT). BscScan verification after each deploy.

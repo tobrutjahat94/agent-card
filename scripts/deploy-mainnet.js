@@ -1,11 +1,15 @@
 // ============================================================
-// DO NOT RUN WITHOUT THE USER'S EXPLICIT GO-AHEAD.
-// Mainnet deploy for AgentCard (BNB Chain, chainId 56).
-// Deploys with the OFFICIAL Agent ID contract — no mock.
-// Requires MAINNET_PRIVATE_KEY env (the deployer pays real BNB gas).
-// Writes addresses to deployments/bscMainnet.json.
-// After deploy: verify on BscScan, then the user registers their own
-// card with their Agent ID via Developer Mode (see README.md).
+// MAINNET DEPLOY — RUN ONLY BY THE HUMAN WALLET OWNER, DIRECTLY.
+// This script is NEVER run by the bot, and no approval given in
+// chat authorizes it. The wallet owner runs it themselves from
+// their own dedicated deployer wallet (new wallet, gas-only BNB,
+// key never shared — see README "Deploy preparation").
+// Deploys AgentCard (BNB Chain, chainId 56) with the OFFICIAL
+// Agent ID contract — no mock. Requires MAINNET_PRIVATE_KEY env
+// (the deployer pays real BNB gas). Writes addresses to
+// deployments/bscMainnet.json. After deploy: verify on BscScan
+// IMMEDIATELY (eligibility requirement), then the holder test
+// (see docs/AGENT-GUIDE.md).
 // ============================================================
 const hre = require("hardhat");
 const fs = require("fs");

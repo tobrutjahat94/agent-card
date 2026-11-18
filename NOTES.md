@@ -28,7 +28,7 @@
 - eth_getLogs from this VM is unreliable (dataseed returns empty / rate-limits -32005; publicnode 403; llamarpc closed; ankr error). TokenId discovery must rely on BscScan "ERC-721 Token Txns" as primary; log scanning is best-effort only.
 
 ## 2026-11-18 ~19:14 — Second steer: 5 checks from user
-1. Testnet cannot prove the Agentic Wallet path (Agentic Wallet docs list mainnet chains only; Agent ID claimable only via App). Testnet = contract logic only. Mainnet proof needs a minimal mainnet deploy + one holder test — **prepared, NOT run, awaiting user approval**.
+1. Testnet cannot prove the Agentic Wallet path (Agentic Wallet docs list mainnet chains only; Agent ID claimable only via App). Testnet = contract logic only. Mainnet proof needs a minimal mainnet deploy + one holder test — **prepared, NOT run; deploy is executed directly by the wallet owner** (no chat approval involved).
 2. ABI check done (above). No enumerable/resolver → identity-as-data = caller address + verified tokenId; **no name forced, no name stored**.
 3. **No name → wallet lookup** anywhere (contract, UI, docs). Directory lists address + tokenId only.
 4. Developer Mode risk check: new unknown contracts can be blocked (351803). The mainnet holder test doubles as a risk-check test — noted as an explicit test objective.
@@ -46,8 +46,15 @@
 
 ## Pending (user steps)
 1. Fund throwaway testnet deployer `0x35ba4f36d3A1CDc99D9dAFc9d4aA9FE11234a364` with ~0.05 tBNB (official faucet in a browser) → then testnet deploy + BscScan verification can run.
-2. Approve + fund the **minimal mainnet deploy** (one deploy tx, small gas) → then the holder test (Developer Mode + `baw contract-call`, incl. risk-check result).
-3. Review `docs/AGENT-GUIDE.md` draft.
-4. Invite 30 Agent ID holders to register during the submission period (needed for Innovation Award eligibility + Pioneer ranking).
-5. Submit via "Submit Project Now" on the official announcement page (fill `SUBMISSION.md`, incl. reward receiving address). Deadline 9 Dec 15:00 WIB.
-6. Optional: X post for the Promotion Award (#BinanceWalletHackathon + #AgenticWallet, submit link via app.binance.com survey).
+2. **Mainnet deploy — executed directly by the wallet owner** (see README "Deploy preparation"): new dedicated deployer wallet, 0.02 BNB gas funding (deploy ~0.00131 BNB at 1 gwei, register ~0.00020 BNB — measured), run `scripts/deploy-mainnet.js`, verify source on BscScan immediately. No chat approval is involved; the bot never deploys.
+3. Holder test after deploy (one Agent ID holder registers via Developer Mode; objectives: call works + passes risk check 351803 + card recorded). Steps in `docs/AGENT-GUIDE.md`.
+4. Review `docs/AGENT-GUIDE.md` draft (pasted in full in the builder's report — user has no access to builder/state files).
+5. Invite 30 Agent ID holders to register during the submission period (needed for Innovation Award eligibility + Pioneer ranking).
+6. Submit via "Submit Project Now" on the official announcement page (fill `SUBMISSION.md`, incl. reward receiving address). Deadline 9 Dec 15:00 WIB.
+7. Optional: X post for the Promotion Award (#BinanceWalletHackathon + #AgenticWallet, submit link via app.binance.com survey).
+
+## 2026-11-18 ~19:17 — CORRECTION: deploy approval is NOT from chat (user steer)
+- Persetujuan/eksekusi deploy mainnet BUKAN sesuatu yang bisa diberikan lewat chat — itu keputusan dan tindakan langsung manusia pemilik wallet. Semua framing "menunggu persetujuan user (chat)" dihapus dari README, SUBMISSION.md, AGENT-GUIDE.md, NOTES.md, dan header `scripts/deploy-mainnet.js`; diganti "deploy dieksekusi langsung oleh manusia pemilik wallet, berdasarkan materi yang disiapkan di sini".
+- Syarat persiapan deploy masuk README ("Deploy preparation"): (1) wallet deployer khusus baru, saldo BNB secukupnya buat gas saja, BUKAN wallet utama; private key TIDAK PERNAH masuk chat/repo/state file. (2) Verifikasi source di BscScan langsung setelah deploy (syarat eligibility). (3) Owner permissions di README — kontrak tidak punya fungsi owner sama sekali (ditulis eksplisit). (4) Jangan ubah kontrak setelah ada interaksi (alamat baru = hitungan mulai nol; testnet dipakai habis-habisan buat logika). (5) SATU KONTRAK SAJA (satu tim satu proyek, cuma alamat yang disubmit yang dihitung).
+- Estimasi gas diukur lokal (`scripts/estimate-gas.js`): deploy AgentCard 1,307,491 gas (~0.00131 BNB @1 gwei, ~0.00392 @3 gwei); register 195,038 gas (~0.00020 BNB @1 gwei). Saran funding deployer: 0.02 BNB.
+- User TIDAK punya akses ke builder/state file dari chat → laporan builder harus berisi SEMUA materi review ditempel lengkap (kode kontrak, draf dokumentasi agent, materi submit), bukan sekadar path file.

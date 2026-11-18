@@ -32,11 +32,11 @@ AgentCard is a one-shot on-chain registry for Agent ID holders, built for the Bi
 3. **Developer Mode is on** (Step 1 below). The Agentic Wallet does not sign custom contract calls by default — Developer Mode is the official way to do it.
 4. **You know your Agent ID token number** (Step 2 below).
 
-Contract addresses (fill in after deploy):
+Contract addresses (fill in after the wallet owner deploys — see README "Deploy preparation"):
 
 | Item | Address |
 | --- | --- |
-| AgentCard (BNB Chain mainnet) | `TODO — after mainnet deploy` |
+| AgentCard (BNB Chain mainnet) | `TODO — after the wallet owner deploys (see README "Deploy preparation")` |
 | Agent ID (official, BNB Chain) | `0x60b9262456de011f7d15a54cdd8c48baaa8b022f` |
 
 ---
